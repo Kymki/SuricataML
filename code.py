@@ -19,7 +19,8 @@ def load_and_prepare_data(file_path):
             'dst_port': alert.get('dst_port'),
             'alert_type': alert.get('alert', {}).get('signature'),
             'protocol': alert.get('proto'),
-            'timestamp': alert.get('@timestamp')
+            'timestamp': alert.get('@timestamp'),
+            'original_alert': alert  # Salva l'intero alert per scriverlo nel nuovo file
         }
         features.append(feature)
 
@@ -40,7 +41,7 @@ def load_and_prepare_data(file_path):
     # Seleziona solo le colonne numeriche per il modello
     df_numeric = df[['src_ip', 'dst_ip', 'src_port', 'dst_port', 'alert_type', 'protocol', 'time_diff']]
 
-    return df, df_numeric
+    return df, df_numeric, features
 
 # Funzione per rilevare anomalie
 def detect_anomalies(df_numeric):
@@ -53,22 +54,35 @@ def detect_anomalies(df_numeric):
 
     return anomalies
 
+# Funzione per scrivere le anomalie nel nuovo file eve_anomalies.json
+def write_anomalies_to_file(anomalies, features, output_path):
+    # Filtra gli alert che sono stati identificati come anomalie
+    anomaly_indexes = anomalies.index.tolist()
+    anomaly_alerts = [features[i] for i in anomaly_indexes]
+
+    # Scrivi le anomalie nel nuovo file JSON
+    with open(output_path, 'w') as f:
+        for alert in anomaly_alerts:
+            json.dump(alert['original_alert'], f)
+            f.write('\n')  # Scrivi ogni alert su una nuova riga
+
 # Funzione principale
-def main(file_path):
+def main(file_path, output_path):
     # Carica e prepara i dati
-    df, df_numeric = load_and_prepare_data(file_path)
+    df, df_numeric, features = load_and_prepare_data(file_path)
 
     # Rileva anomalie (falsi positivi potenziali)
     anomalies = detect_anomalies(df_numeric)
 
-    # Stampa gli alert considerati anomalie
+    # Scrivi le anomalie rilevate in un nuovo file JSON
     if not anomalies.empty:
-        print("Allarmi anomali (potenziali falsi positivi):")
-        print(anomalies)
+        print(f"Anomalie rilevate. Le anomalie sono state scritte nel file: {output_path}")
+        write_anomalies_to_file(anomalies, features, output_path)
     else:
         print("Nessuna anomalia rilevata.")
 
-# Inserisci il percorso del file 'eve.json' qui
+# Inserisci il percorso del file 'eve.json' e del file di output
 if __name__ == "__main__":
-    file_path = "path_to_your_eve.json"  # Sostituisci con il percorso corretto del tuo file eve.json
-    main(file_path)
+    input_file = "path_to_your_eve.json"  # Sostituisci con il percorso corretto del tuo file eve.json
+    output_file = "eve_anomalies.json"    # Nome del file di output
+    main(input_file, output_file)
