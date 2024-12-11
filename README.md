@@ -1,5 +1,5 @@
 # SuricataML
-Suricate powered by Machine Learning (Beta)
+Suricata powered by Machine Learning (Beta)
 
 
 Rilevamento di anomalie e falsi positivi con Suricata e eve.json
@@ -10,9 +10,13 @@ Installazione
 
 Requisiti
 Python 3.x: È necessario avere Python 3 installato nel sistema. È possibile verificarlo con il comando:
+```
 python3 --version
+```
 Dipendenze: Lo script richiede alcune librerie Python. Per installarle, basta eseguire il comando:
+```
 pip install -r requirements.txt
+```
 Creazione del file requirements.txt
 Se il file requirements.txt non è presente, può essere creato con il seguente contenuto:
 
@@ -28,7 +32,7 @@ pip install -r requirements.txt
 ```
 
 Preparazione del file eve.json
-Il file eve.json deve essere un output generato da Suricata in formato JSON. Questo può essere ottenuto dalla configurazione di Suricata, generalmente localizzata in /etc/suricata/suricata.yaml.
+Il file eve.json deve essere un output generato da Suricata in formato JSON. Questo può essere ottenuto dalla configurazione di Suricata, in /etc/suricata/suricata.yaml.
 
 Uso
 
@@ -36,7 +40,9 @@ Passaggio 1: Esecuzione dello script Python
 Dopo aver installato le dipendenze e preparato il file eve.json, si può eseguire lo script Python per rilevare anomalie. È necessario sostituire "path_to_your_eve.json" con il percorso effettivo del file eve.json.
 
 Esecuzione dello script Python:
+```
 python detect_anomalies.py
+```
 Output: Lo script mostrerà gli alert che vengono considerati anomalie, i quali potrebbero essere falsi positivi. Questi alert si discostano dal comportamento normale della rete, secondo il modello di rilevamento delle anomalie.
 Logstash e Elasticsearch
 
@@ -64,7 +70,7 @@ filter {
 output {
   elasticsearch {
     hosts => ["http://localhost:9200"]
-    index => "suricata-eve-%{+YYYY.MM.dd}"
+    index => "suricata-eve-anomalies-%{+YYYY.MM.dd}"
   }
 }
 
@@ -89,7 +95,3 @@ Dopo che i dati sono stati inviati a Elasticsearch tramite Logstash, è possibil
 ```
 localhost:5601 
 ```
-
-o su un altro host configurato).
-Accedere alla sezione "Discover" di Kibana e cercare l'indice suricata-eve-*.
-A questo punto, si potranno esplorare gli alert generati da Suricata, creare dashboard, visualizzazioni, ed effettuare un'analisi approfondita del traffico di rete.
